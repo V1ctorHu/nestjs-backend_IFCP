@@ -91,6 +91,11 @@ export class BooksController {
   async getAllBooks() {
     return this.booksService.getAllBooks();
   }
+  
+  @Get('recent')
+  getRecentBooks() {
+    return this.booksService.getRecentBooks();
+  }
 
   @Get(':id')
   async findOne(@Param('id') id: number) {

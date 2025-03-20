@@ -21,7 +21,6 @@ export class BooksService {
   async create(createBookDto: CreateBookDto, filePath: string) {
     const { title, editorial, codigo, author, categoryId } = createBookDto;
 
-
     const category = await this.categoryRepository.findOne({
       where: { id: categoryId },
     });
@@ -36,7 +35,7 @@ export class BooksService {
       codigo,
       author,
       category,
-      file_path:filePath,
+      file_path: filePath,
     });
     return await this.bookRepository.save(newBook);
   }
@@ -47,7 +46,7 @@ export class BooksService {
     });
   }
 
-  async findOne(id: number){
+  async findOne(id: number) {
     const book = await this.bookRepository.findOne({
       where: { id },
       relations: ['category'],
@@ -62,17 +61,17 @@ export class BooksService {
       const category = await this.categoryRepository.findOne({
         where: { id: updateBookDto.categoryId },
       });
-      
+
       if (!category) {
         throw new NotFoundException(
           `Categoría con ID ${updateBookDto.categoryId} no encontrada`,
         );
       }
-      
+
       book.category = category;
       delete updateBookDto.categoryId; // Eliminamos categoryId del DTO
     }
-    
+
     // Actualizamos las propiedades del libro
     Object.assign(book, updateBookDto);
     await this.bookRepository.update(id, updateBookDto);
@@ -90,15 +89,15 @@ export class BooksService {
     filePath: string;
     author: string;
     categoryId: number;
-
   }) {
-
     const category = await this.categoryRepository.findOne({
       where: { id: data.categoryId },
     });
-  
+
     if (!category) {
-      throw new NotFoundException(`Categoría con ID ${data.categoryId} no encontrada`);
+      throw new NotFoundException(
+        `Categoría con ID ${data.categoryId} no encontrada`,
+      );
     }
 
     const newBook = this.bookRepository.create({
@@ -106,8 +105,8 @@ export class BooksService {
       editorial: data.editorial,
       codigo: data.codigo,
       file_path: data.filePath,
-      author:data.author,
-      category
+      author: data.author,
+      category,
     });
 
     return await this.bookRepository.save(newBook);
@@ -155,4 +154,17 @@ export class BooksService {
 
     await this.bookRepository.remove(book);
   }
+
+  async getRecentBooks() {
+    const oneMonthAgo = new Date();
+    oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
+  
+    return await this.bookRepository.find({
+      where: {
+        lastViewed: { $gte: oneMonthAgo }, // Para MongoDB
+        // lastViewed: MoreThan(oneMonthAgo), // Para MySQL / Postgres
+      },
+    });
+  }
+  
 }

@@ -4,11 +4,14 @@ import { join } from 'path';
 import { NestExpressApplication } from '@nestjs/platform-express';
 
 async function bootstrap() {
-  const app = await NestFactory.create<NestExpressApplication>(AppModule);
+  const app = await NestFactory.create(AppModule);
 
-  app.useStaticAssets(join(__dirname, '..', 'uploads'), {
-    prefix: '/uploads/',
+  app.enableCors({
+    origin: 'http://localhost:4200', // frontend Angular
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
+    credentials: true,
   });
-  await app.listen(process.env.PORT ?? 3000);
+  
+  await app.listen(3000);
 }
 bootstrap();

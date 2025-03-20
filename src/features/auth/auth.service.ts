@@ -7,35 +7,77 @@ import { UsersService } from '../users/users.service';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { LoginDto } from './dto/login.dto';
+import { RegisterDto } from './dto/register.dto';
 import { Repository } from 'typeorm';
-import { User } from '../users/entities/user.entity';
+import { User, UserRole } from '../users/entities/user.entity';
 import { InjectRepository } from '@nestjs/typeorm';
-
+import { CreateUserDto } from '../users/dto/create-user.dto';
 
 @Injectable()
 export class AuthService {
-
+  findById(arg0: any) {
+    throw new Error('Method not implemented.');
+  }
   constructor(
     private readonly usersService: UsersService,
     private readonly jwtService: JwtService,
     @InjectRepository(User)
     private readonly userRepository: Repository<User>
   ) {}
- 
+
+  /** 📌 Registro de usuario */
+  async register(createUserDTO: CreateUserDto) {
+    const { username, firstname, lastname, email, password, puesto, area_adscripcion} = createUserDTO;
+
+    // Verificar si el usuario ya existe
+    const existingUser = await this.userRepository.findOne({ where: { email } });
+    if (existingUser) {
+      throw new BadRequestException('El correo ya está registrado');
+    }
+
+    // Cifrar la contraseña
+    const salt = await bcrypt.genSalt();
+    const hashedPassword = await bcrypt.hash(password, salt);
+
+    // Crear el nuevo usuario
+    const newUser = this.userRepository.create({
+      username,
+      firstname,
+      lastname,
+      email,
+      puesto,
+      area_adscripcion ,
+      password: hashedPassword,
+      role: UserRole.USER,
+    });
+
+    await this.userRepository.save(newUser);
+
+    // Generar token JWT
+    const payload = { sub: newUser.id, role: newUser.role };
+    const access_token = this.jwtService.sign(payload);
+
+    return {
+      message: 'Usuario registrado exitosamente',
+      access_token,
+      user: newUser,
+    };
+  }
+
   async login(loginDto: LoginDto) {
     const user = await this.usersService.validateUser(
       loginDto.email,
       loginDto.password,
     );
-    const payload = { sub: user.id, role: user.role };
 
+    const payload = { sub: user.id, role: user.role };
     return {
       access_token: this.jwtService.sign(payload),
       user,
     };
   }
 
-  //Recupereación de contraseña mediante e-mail
+  /** token para recuperación de contraseña */
   async generateResetToken(email: string) {
     const user = await this.usersService.findByEmail(email);
     if (!user) {
@@ -45,15 +87,16 @@ export class AuthService {
     const payload = { sub: user.id, email: user.email };
     const resetToken = this.jwtService.sign(payload, {
       secret: process.env.JWT_SECRET,
-      expiresIn: '15m', //tiempo de expiración del token de recuperación
+      expiresIn: '15m',
     });
-    
+
     const resetLink = `http://frontend.com/reset-password?token=${resetToken}`;
     console.log(`Enlace de recuperación: ${resetLink}`);
 
-    return {resetToken, resetLink};
+    return { resetToken, resetLink };
   }
 
+  /** restablecer contraseña */
   async resetPassword(token: string, newPassword: string) {
     try {
       const payload = this.jwtService.verify(token, { secret: process.env.JWT_SECRET });
