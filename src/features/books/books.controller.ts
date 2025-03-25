@@ -61,7 +61,8 @@ export class BooksController {
   )
   async uploadFile(
     @UploadedFile() file: Express.Multer.File,
-    @Body() body: {
+    @Body()
+    body: {
       title: string;
       editorial: string;
       codigo: string;
@@ -83,7 +84,11 @@ export class BooksController {
       categoryId: body.categoryId,
     });
 
-    return { message: 'Archivo subido correctamente', book, fileName : path.basename(file.path) };
+    return {
+      message: 'Archivo subido correctamente',
+      book,
+      fileName: path.basename(file.path),
+    };
   }
 
   /*  @Roles(UserRole.USER, UserRole.ADMIN, UserRole.PARTNER) */
@@ -91,10 +96,15 @@ export class BooksController {
   async getAllBooks() {
     return this.booksService.getAllBooks();
   }
-  
+
   @Get('recent')
   getRecentBooks() {
     return this.booksService.getRecentBooks();
+  }
+
+  @Get('category/:categoryId')
+  async getBooksByCategory(@Param('categoryId') categoryId: number) {
+    return await this.booksService.findByCategory(categoryId);
   }
 
   @Get(':id')

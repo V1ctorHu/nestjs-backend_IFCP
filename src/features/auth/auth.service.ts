@@ -1,8 +1,4 @@
-import {
-  BadRequestException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import {BadRequestException, Injectable, NotFoundException,} from '@nestjs/common';
 import { UsersService } from '../users/users.service';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
@@ -25,7 +21,6 @@ export class AuthService {
     private readonly userRepository: Repository<User>
   ) {}
 
-  /** 📌 Registro de usuario */
   async register(createUserDTO: CreateUserDto) {
     const { username, firstname, lastname, email, password, puesto, area_adscripcion} = createUserDTO;
 
@@ -54,7 +49,7 @@ export class AuthService {
     await this.userRepository.save(newUser);
 
     // Generar token JWT
-    const payload = { sub: newUser.id, role: newUser.role };
+    const payload = { sub: newUser.publicId, role: newUser.role };
     const access_token = this.jwtService.sign(payload);
 
     return {
@@ -65,16 +60,28 @@ export class AuthService {
   }
 
   async login(loginDto: LoginDto) {
-    const user = await this.usersService.validateUser(
-      loginDto.email,
-      loginDto.password,
-    );
+    const user = await this.usersService.validateUser(loginDto.email,loginDto.password,);
 
+    if (!user) {
+      throw new BadRequestException('Credenciales incorrectas');
+    }
     const payload = { sub: user.id, role: user.role };
     return {
       access_token: this.jwtService.sign(payload),
       user,
     };
+  }
+
+  async getProfile(userId: number) {
+    const user = await this.userRepository.findOne({
+      where: { id: userId },
+      select: ['id', 'username', 'firstname', 'lastname', 'role'],
+    });
+  
+    if (!user) {
+      throw new NotFoundException('Usuario no encontrado');
+    }
+    return user;
   }
 
   /** token para recuperación de contraseña */

@@ -1,4 +1,5 @@
-import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, BeforeInsert } from 'typeorm';
+import * as bcrypt from 'bcrypt';
 
 export enum UserRole {
   ADMIN = 'admin',
@@ -38,4 +39,16 @@ export class User {
     default: UserRole.USER, // por defecto, los usuarios seran 'users'
   })
   role: UserRole; // por defecto los usuarios serán 'user', el admin puede modificar roles para convertirlos en 'partner'
+
+  @Column({ unique: true })
+  publicId: string;
+
+  @BeforeInsert()
+  async generatePublicId() {
+    if (!this.publicId) {
+      const salt = await bcrypt.genSalt(5);
+      this.publicId = await bcrypt.hash(this.username + Date.now(), salt);
+      this.publicId = this.publicId.replace(/\W/g, '').substring(0, 15);
+    }
+  }
 }

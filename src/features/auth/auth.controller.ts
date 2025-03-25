@@ -5,7 +5,6 @@ import { CreateUserDto } from '../users/dto/create-user.dto';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 @Controller('auth')
 export class AuthController {
-
 constructor(private readonly authService: AuthService) {}
 
 @Post('register')
@@ -32,8 +31,6 @@ async register(@Body() createUserDto: CreateUserDto) {
   @UseGuards(JwtAuthGuard) 
   @Get('profile')
   getProfile(@Req() req) {
-    return req.user; 
+    return this.authService.getProfile(req.user.sub);
   }
-
-
 }

@@ -19,11 +19,13 @@ export class CategoriesService {
   }
 
   async findAll(): Promise<Category[]> {
-    return await this.categoryRepository.find();
+    return await this.categoryRepository.find({
+      relations: ['books'],
+    });
   }
 d
   async findOne(id: number): Promise<Category> {
-    const category = await this.categoryRepository.findOne({ where: { id } });
+    const category = await this.categoryRepository.findOne({ where: { id }, relations: ['books'], });
     if (!category) throw new NotFoundException(`Categoría con ID ${id} no encontrada`);
     return category;
   }

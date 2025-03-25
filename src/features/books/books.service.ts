@@ -133,6 +133,20 @@ export class BooksService {
     return book;
   }
 
+  async findByCategory(categoryId: number): Promise<Book[]> {
+    const books = await this.bookRepository.find({
+      where: { category: { id: categoryId } },
+      relations: ['category'],
+    });
+  
+    if (!books.length) {
+      throw new NotFoundException(`No hay libros en la categoría con ID ${categoryId}`);
+    }
+    
+    return books;
+  }
+  
+
   //Servicio eliminar libro por ID
   async remove(id: number): Promise<void> {
     const book = await this.bookRepository.findOne({ where: { id } });
