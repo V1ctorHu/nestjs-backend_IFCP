@@ -1,20 +1,10 @@
-import {
-  Body,
-  Controller,
-  Delete,
-  Get,
-  Param,
-  Post,
-  Put,
-  UnauthorizedException,
-  UseGuards,
-} from '@nestjs/common';
+import { BadRequestException, Body, Controller, Delete, Get, NotFoundException, Param, Post, Put, UnauthorizedException, UseGuards,} from '@nestjs/common';
 import { Roles } from 'src/features/roles/roles.decorator';
-import { RolesGuard } from 'src/features/roles/roles.guard';
 import { UserRole } from './entities/user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UsersService } from './users.service';
 import { LoginDto } from '../auth/dto/login.dto';
+import { RolesGuard } from '../auth/guards/roles.guard';
 
 @Controller('users')
 @UseGuards(RolesGuard)
@@ -51,26 +41,37 @@ export class UsersController {
         id: user.id,
         email: user.email,
         role: user.role,
+        username: user.username || 'Usuario sin nombre',
       },
     };
   }
 
+/*   @Roles(UserRole.ADMIN, UserRole.PARTNER) */
   @Put(':id')
   update(@Param('id') id: string, @Body() updateUserDto: any) {
     return this.usersService.update(+id, updateUserDto);
   }
 
+/*   @Roles(UserRole.ADMIN) */
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.usersService.remove(+id);
   }
+/* 
+  @Put(':id/promote')
+  async promoteToPartner(@Param('id') userId: number) {
+    return this.usersService.promoteToPartner(userId);
+  }
 
-  @Roles(UserRole.ADMIN)
-  @Put('promote/:id')
-  async promoteUserToPartner(@Param('id') userId: number) {
-    const user = await this.usersService.findOne(userId);
-    user.role = UserRole.PARTNER;
-    await this.usersService.update(userId, user);
-    return ` Usuario con ID ${userId} ahora es Partner`;
+  @Put(':id/demote')
+  async demoteToUser(@Param('id') userId: number) {
+    return this.usersService.demoteToUser(userId);
+  } */
+
+  @Get('manage-users')
+  getManageUsersPage() {
+    return {
+      message: 'Acceso permitido a la vista de gestión de usuarios',
+    };
   }
 }

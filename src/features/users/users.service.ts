@@ -5,17 +5,18 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { User } from './entities/user.entity';
+import { User, UserRole } from './entities/user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class UsersService {
+ 
   async findByEmail(email: string) {
     return await this.userRepository.findOne({
       where: { email },
-      select: ['id', 'email', 'password', 'role'],
+      select: ['id', 'email', 'password', 'role', 'username'],
     });
   }
   constructor(
@@ -76,8 +77,24 @@ export class UsersService {
       throw new UnauthorizedException('Datos incorrectos');
     }
 
-    const { password: _, ...result } = user; // Excluimos la contraseña en la respuesta
-    return result;
+    return {
+      id: user.id,
+      email: user.email,
+      role: user.role,
+      username: user.username || 'Usuario sin nombre',
+    };
+  }
+
+  async updateUserRole(adminId: number, userId: number, newRole: UserRole) {
+    const admin = await this.findOne(adminId);
+    if (admin.role !== UserRole.ADMIN) {
+      throw new UnauthorizedException('Solo un administrador puede cambiar roles.');
+    }
+  
+    const user = await this.findOne(userId);
+    user.role = newRole;
+    await this.userRepository.save(user);
+    return `Rol de usuario con ID ${userId} actualizado a ${newRole}`;
   }
 
 }

@@ -8,6 +8,9 @@ import { QueryDeepPartialEntity } from 'typeorm/query-builder/QueryPartialEntity
 
 @Injectable()
 export class CategoriesService {
+  async getBooksByCategory(id: number) {
+    throw new Error('Method not implemented.');
+  }
   constructor(
     @InjectRepository(Category)
     private readonly categoryRepository: Repository<Category>,
@@ -23,7 +26,6 @@ export class CategoriesService {
       relations: ['books'],
     });
   }
-d
   async findOne(id: number): Promise<Category> {
     const category = await this.categoryRepository.findOne({ where: { id }, relations: ['books'], });
     if (!category) throw new NotFoundException(`Categoría con ID ${id} no encontrada`);

@@ -1,10 +1,11 @@
-import { Entity, PrimaryGeneratedColumn, Column, BeforeInsert } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, BeforeInsert, OneToMany } from 'typeorm';
 import * as bcrypt from 'bcrypt';
+import { SavedBook } from 'src/features/saved-book/dto/entities/saved-book.entity';
 
 export enum UserRole {
   ADMIN = 'admin',
-  USER = 'user',
   PARTNER = 'partner',
+  USER = 'user',
 }
 
 @Entity('users')
@@ -31,7 +32,13 @@ export class User {
   area_adscripcion: string;
 
   @Column()
+  sub_area: string;
+
+  @Column()
   password: string;
+
+  @OneToMany(() => SavedBook, (savedBook) => savedBook.user)
+  savedBooks: SavedBook[]; // Relación con los libros guardados
 
   @Column({
     type: 'enum',

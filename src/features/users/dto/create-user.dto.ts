@@ -27,6 +27,10 @@ export class CreateUserDto {
 
   @IsString()
   @IsNotEmpty()
+  sub_area : string;
+
+  @IsString()
+  @IsNotEmpty()
   password: string;
 
   @IsString()
