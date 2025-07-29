@@ -10,6 +10,6 @@ export const dataSource = new DataSource({
   database: process.env.DB_NAME,
   entities: ["src/entities/*.ts"],
   migrations: ["src/migrations/*.ts"],
-  synchronize: false, // ⚠️ Usar "true" solo en desarrollo
+  synchronize: false, //Usar "true" solo en desarrollo
   logging: true,
 });
